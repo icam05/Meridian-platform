@@ -1,0 +1,12 @@
+{
+  "Version": 1,
+  "Hash": "ZgQOf/FVasBJEzISs2SGe+YK+dEPhQDQUUkD+ARJkQ8=",
+  "Source": "Meridian.Api",
+  "BasePath": "_content/Meridian.Api",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": [],
+  "Endpoints": []
+}
