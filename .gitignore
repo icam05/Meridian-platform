@@ -1,0 +1,21 @@
+# Build artifacts
+bin/
+obj/
+
+# Visual Studio
+.vs/
+.vscode/
+
+# User files
+*.user
+
+# Node (for later React)
+node_modules/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# .NET build outputs
+**/bin/
+**/obj/
