@@ -1,36 +1,18 @@
-import { useEffect, useState } from "react";
-import { api } from "../services/api";
-
-type TestDbInfo = {
-  databaseName: string;
-  tableCount: number;
-  viewCount: number;
-  procCount: number;
-  schemaCount: number;
-};
+import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
+import PatientsList from "../pages/PatientsList";
+import PatientDetail from "../pages/PatientDetail";
 
 export default function App() {
-  const [data, setData] = useState<TestDbInfo | null>(null);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    api
-      .get<TestDbInfo>("/api/test-db")
-      .then((r) => setData(r.data))
-      .catch((e) => setError(e?.message ?? "Request failed"));
-  }, []);
-
   return (
-    <div style={{ padding: 24, fontFamily: "Arial" }}>
-      <h1>Meridian Platform</h1>
+    <BrowserRouter>
+      <nav>
+        <Link to="/patients">Patients</Link>
+      </nav>
 
-      {error && <pre>{error}</pre>}
-
-      {data ? (
-        <pre>{JSON.stringify(data, null, 2)}</pre>
-      ) : (
-        !error && <p>Loading…</p>
-      )}
-    </div>
+      <Routes>
+        <Route path="/patients" element={<PatientsList />} />
+        <Route path="/patients/:id" element={<PatientDetail />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
