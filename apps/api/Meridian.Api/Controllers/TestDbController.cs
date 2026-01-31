@@ -30,7 +30,11 @@ public class TestDbController : ControllerBase
         return Ok(info);
 
 
-        /*
+
+    }
+}
+
+/*
                 var result = await conn.ExecuteScalarAsync<int>(
                     "SELECT COUNT(*) FROM sys.tables"
                 );
@@ -41,5 +45,3 @@ public class TestDbController : ControllerBase
                     tableCount = result,
                     utc = DateTime.UtcNow
                 });  */
-    }
-}
