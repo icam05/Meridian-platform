@@ -20,6 +20,12 @@ public class TestDbController : ControllerBase
     {
         using var connection = _factory.CreateConnection();
         var result = await connection.QueryFirstAsync<int>("SELECT 1");
-        return Ok(result);
+
+        return Ok(new
+        {
+            database = "connected",
+            result
+        });
+
     }
 }

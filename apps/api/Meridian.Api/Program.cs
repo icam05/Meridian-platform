@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Meridian.Api.Infrastructure.Data;
 
 
+
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
     .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
@@ -20,9 +21,6 @@ builder.Host.UseSerilog();
 
 builder.Services.AddControllers();
 
-builder.Services.AddScoped<ISqlConnectionFactory, SqlConnectionFactory>();
-
-
 // OpenAPI / Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -34,6 +32,15 @@ builder.Services.AddSwaggerGen(c =>
         Description = "Enterprise-grade ingestion and analytics platform for healthcare data."
     });
 });
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowReact", p =>
+        p.WithOrigins("http://localhost:5173")
+         .AllowAnyHeader()
+         .AllowAnyMethod());
+});
+
 
 // API versioning (default v1.0 + reports supported versions)
 builder.Services.AddApiVersioning(options =>
@@ -47,7 +54,7 @@ builder.Services.AddApiVersioning(options =>
 builder.Services.AddProblemDetails();
 
 // Health checks
-var sqlConn = builder.Configuration.GetConnectionString("DefaultConnection")
+var sqlConn = builder.Configuration.GetConnectionString("SqlServer")
     ?? throw new InvalidOperationException("Missing ConnectionStrings:SqlServer");
 
 builder.Services.AddHealthChecks()
@@ -58,11 +65,11 @@ builder.Services.AddHealthChecks()
         name: "sqlserver",
         tags: new[] { "ready" });
 
+builder.Services.AddScoped<ISqlConnectionFactory, SqlConnectionFactory>();
+
+
 
 var app = builder.Build();
-
-// Global exception boundary
-//app.UseExceptionHandler();
 
 if (app.Environment.IsDevelopment())
 {
@@ -74,7 +81,17 @@ else
 }
 
 
-app.UseHttpsRedirection();
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Meridian API v1");
+        c.RoutePrefix = "swagger";
+    });
+}
+
+//app.UseHttpsRedirection();
 
 // Correlation / Request Id (propagate or generate; echoed back to clients)
 // IMPORTANT: Must run BEFORE request logging so logs include RequestId.
@@ -105,6 +122,9 @@ app.UseSerilogRequestLogging(options =>
         diag.Set("RequestId", httpContext.TraceIdentifier);
     };
 });
+
+app.UseCors("AllowReact");
+
 
 app.UseRouting();
 app.UseAuthorization();

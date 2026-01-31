@@ -10,8 +10,8 @@ public sealed class SqlConnectionFactory : ISqlConnectionFactory
     public SqlConnectionFactory(IConfiguration configuration)
     {
         _connectionString =
-            configuration.GetConnectionString("DefaultConnection")
-            ?? throw new InvalidOperationException("Missing connection string 'DefaultConnection'.");
+            configuration.GetConnectionString("SqlServer")
+            ?? throw new InvalidOperationException("Missing connection string 'SqlServer'.");
     }
 
     public IDbConnection CreateConnection() => new SqlConnection(_connectionString);
