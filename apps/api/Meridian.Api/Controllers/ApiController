@@ -1,0 +1,25 @@
+using Dapper;
+using Microsoft.AspNetCore.Mvc;
+using Meridian.Api.Infrastructure.Data;
+
+namespace Meridian.Api.Controllers;
+
+[ApiController]
+[Route("api/test-db")]
+public class TestDbController : ControllerBase
+{
+    private readonly ISqlConnectionFactory _factory;
+
+    public TestDbController(ISqlConnectionFactory factory)
+    {
+        _factory = factory;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> TestConnection()
+    {
+        using var connection = _factory.CreateConnection();
+        var result = await connection.QueryFirstAsync<int>("SELECT 1");
+        return Ok(result);
+    }
+}
