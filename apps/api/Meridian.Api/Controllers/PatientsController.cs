@@ -1,6 +1,7 @@
 using Dapper;
 using Microsoft.AspNetCore.Mvc;
 using Meridian.Api.Contracts.Patients;
+using Meridian.Api.Contracts.PlanEnrollments;
 using Meridian.Api.Infrastructure.Data;
 
 namespace Meridian.Api.Controllers;
@@ -67,4 +68,63 @@ public sealed class PatientsController : ControllerBase
 
         return Ok(patient);
     }
+
+    // GET /api/patients/{id}/plan-enrollments
+    [HttpGet("{id:long}/plan-enrollments")]
+    public async Task<ActionResult<IEnumerable<PlanEnrollmentListItemDto>>> GetPlanEnrollments(long id)
+    {
+        const string sql = """
+            SELECT
+                pe.PlanEnrollmentId,
+                pe.PatientId,
+                (p.LastName + ', ' + p.FirstName) AS PatientName,
+                pe.PlanId,
+                hp.PlanName,
+                pe.EffectiveStartDtm,
+                pe.EffectiveEndDtm
+            FROM dbo.PlanEnrollment pe
+            INNER JOIN dbo.Patient p ON p.PatientId = pe.PatientId
+            INNER JOIN dbo.HealthPlan hp ON hp.PlanId = pe.PlanId
+            WHERE pe.PatientId = @PatientId
+            ORDER BY pe.EffectiveStartDtm DESC, pe.PlanEnrollmentId DESC;
+        """;
+
+        using var conn = _factory.CreateConnection();
+        var rows = await conn.QueryAsync<PlanEnrollmentListItemDto>(sql, new { PatientId = id });
+
+        return Ok(rows);
+    }
+    // GET /api/patients/{id}/current-plan-enrollment
+    [HttpGet("{id:long}/current-plan-enrollment")]
+    public async Task<ActionResult<PlanEnrollmentListItemDto?>> GetCurrentPlanEnrollment(long id)
+    {
+        const string sql = """
+            SELECT TOP (1)
+                pe.PlanEnrollmentId,
+                pe.PatientId,
+                (p.LastName + ', ' + p.FirstName) AS PatientName,
+                pe.PlanId,
+                hp.PlanName,
+                pe.EffectiveStartDtm,
+                pe.EffectiveEndDtm
+            FROM dbo.PlanEnrollment pe
+            INNER JOIN dbo.Patient p ON p.PatientId = pe.PatientId
+            INNER JOIN dbo.HealthPlan hp ON hp.PlanId = pe.PlanId
+            WHERE pe.PatientId = @PatientId
+              AND (
+                    pe.EffectiveEndDtm IS NULL
+                    OR pe.EffectiveEndDtm >= SYSDATETIME()
+                  )
+            ORDER BY pe.EffectiveStartDtm DESC, pe.PlanEnrollmentId DESC;
+        """;
+
+        using var conn = _factory.CreateConnection();
+        var row = await conn.QuerySingleOrDefaultAsync<PlanEnrollmentListItemDto>(
+            sql,
+            new { PatientId = id }
+        );
+
+        return Ok(row); // 200 with null is fine
+    }
+
 }
